@@ -12,6 +12,6 @@ public class Main {
 
         botsApi.registerBot(new Bot());
 
-        System.out.println("Бот запущен!n");
+        System.out.println("Бот запущенm!n");
     }
 }
