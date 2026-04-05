@@ -5,21 +5,24 @@ import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.methods.send.SendPhoto;
 import org.telegram.telegrambots.meta.api.objects.InputFile;
 import org.telegram.telegrambots.meta.api.objects.Update;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 
 public class CampBot extends TelegramLongPollingBot {
 
     @Override
     public String getBotUsername() {
-        return "kaleydoskop_camp_bot"; // заменить на имя бота
+        return "kaleydoskop_camp_bot";
     }
 
     @Override
     public String getBotToken() {
-        return "8672163632:AAEuckc9aiDpF6brPGLt7rGgS5pCd2ejW8s"; // заменить на токен от BotFather
+        return "8672163632:AAEuckc9aiDpF6brPGLt7rGgS5pCd2ejW8s";
     }
 
     @Override
@@ -29,17 +32,78 @@ public class CampBot extends TelegramLongPollingBot {
             long chatId = update.getMessage().getChatId();
 
             try {
-                if (text.equalsIgnoreCase("/plan")) {
-                    sendPlan(chatId);
-                } else if (text.equalsIgnoreCase("/plan_setka")) {
-                    sendPlanSetka(chatId);
-                } else if (text.equalsIgnoreCase("/start") || text.equalsIgnoreCase("/help")) {
-                    sendHelp(chatId);
+                switch (text) {
+
+                    case "/start":
+                    case "/help":
+                        sendMainMenu(chatId);
+                        break;
+
+                    case "📅 План дня":
+                        sendPlan(chatId);
+                        break;
+
+                    case "🗺 План-сетка":
+                        sendPlanSetka(chatId);
+                        break;
+
+                    case "🎮 Игры":
+                        sendText(chatId, "🎮 Раздел игр (пока в разработке)");
+                        break;
+
+                    case "🍽 Столовая":
+                        sendText(chatId, "🍽 Меню столовой (пока в разработке)");
+                        break;
+
+                    case "📖 Правила":
+                        sendText(chatId, "📖 Правила лагеря (пока в разработке)");
+                        break;
+
+                    case "📋 Методички":
+                        sendText(chatId, "📋 Методички (пока в разработке)");
+                        break;
+
+                    default:
+                        sendText(chatId, "Не понимаю команду 🤔");
                 }
             } catch (Exception e) {
                 sendError(chatId, e.getMessage());
             }
         }
+    }
+
+    private void sendText(long chatId, String text) throws TelegramApiException {
+        SendMessage message = new SendMessage();
+        message.setChatId(chatId);
+        message.setText(text);
+        execute(message);
+    }
+
+    private void sendMainMenu(long chatId) throws TelegramApiException {
+        SendMessage message = new SendMessage();
+        message.setChatId(chatId);
+        message.setText("🏕 Выбери раздел:");
+
+        ReplyKeyboardMarkup keyboard = new ReplyKeyboardMarkup();
+        keyboard.setResizeKeyboard(true);
+
+        KeyboardRow row1 = new KeyboardRow();
+        row1.add("📅 План дня");
+        row1.add("🗺 План-сетка");
+
+        KeyboardRow row2 = new KeyboardRow();
+        row2.add("🎮 Игры");
+        row2.add("🍽 Столовая");
+
+        KeyboardRow row3 = new KeyboardRow();
+        row3.add("📖 Правила");
+        row3.add("📋 Методички");
+
+        keyboard.setKeyboard(List.of(row1, row2, row3));
+
+        message.setReplyMarkup(keyboard);
+
+        execute(message);
     }
 
     private void sendHelp(long chatId) {
