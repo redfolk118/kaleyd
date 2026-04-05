@@ -16,10 +16,22 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.telegram.telegrambots.bots.DefaultBotOptions;
+
 
 public class CampBot extends TelegramLongPollingBot {
 
     private static final Logger log = LoggerFactory.getLogger(CampBot.class);
+
+    public CampBot() {
+        DefaultBotOptions options = new DefaultBotOptions();
+        options.setProxyHost("127.0.0.1");
+        options.setProxyPort(12334);
+        options.setProxyType(DefaultBotOptions.ProxyType.SOCKS5);
+
+        super(options); // <- здесь подключаем прокси
+    }
+
 
     @Override
     public String getBotUsername() {
