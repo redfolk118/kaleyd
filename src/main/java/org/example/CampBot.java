@@ -13,7 +13,13 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+
 public class CampBot extends TelegramLongPollingBot {
+
+    private static final Logger log = LoggerFactory.getLogger(CampBot.class);
 
     @Override
     public String getBotUsername() {
@@ -30,7 +36,7 @@ public class CampBot extends TelegramLongPollingBot {
         if (update.hasMessage() && update.getMessage().hasText()) {
             String text = update.getMessage().getText();
             long chatId = update.getMessage().getChatId();
-
+            log.info("New message from {}: {}", chatId, text);
             try {
                 switch (text) {
 
@@ -67,6 +73,7 @@ public class CampBot extends TelegramLongPollingBot {
                         sendText(chatId, "Не понимаю команду 🤔");
                 }
             } catch (Exception e) {
+                log.error("Error occurred", e);
                 sendError(chatId, e.getMessage());
             }
         }
@@ -138,7 +145,7 @@ public class CampBot extends TelegramLongPollingBot {
                 sendError(chatId, "Plan file not found in resources");
                 return;
             }
-            
+            log.info("Sending plan to {}", chatId);
             String planText = new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
             SendMessage message = new SendMessage();
             message.setChatId(chatId);
@@ -156,7 +163,7 @@ public class CampBot extends TelegramLongPollingBot {
                 sendError(chatId, "Plan grid image not found in resources");
                 return;
             }
-            
+
             SendPhoto photo = new SendPhoto();
             photo.setChatId(chatId);
             photo.setPhoto(new InputFile(inputStream, "plan_setka.png"));
