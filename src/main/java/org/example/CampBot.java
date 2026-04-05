@@ -27,17 +27,17 @@ public class CampBot extends TelegramLongPollingBot {
     private static final String USERS_FILE = "users.txt";
     private Set<Long> allChatIds = new HashSet<>();
     public CampBot() {
+        super(getOptionsWithSocksProxy());
         loadUsers();
-//        super(getOptionsWithSocksProxy());
     }
 
-//    private static DefaultBotOptions getOptionsWithSocksProxy() {
-//        DefaultBotOptions options = new DefaultBotOptions();
-//        options.setProxyHost("127.0.0.1");
-//        options.setProxyPort(12334);
-//        options.setProxyType(DefaultBotOptions.ProxyType.SOCKS5);
-//        return options;
-//    }
+    private static DefaultBotOptions getOptionsWithSocksProxy() {
+        DefaultBotOptions options = new DefaultBotOptions();
+        options.setProxyHost("127.0.0.1");
+        options.setProxyPort(12334);
+        options.setProxyType(DefaultBotOptions.ProxyType.SOCKS5);
+        return options;
+    }
 
 
     @Override
