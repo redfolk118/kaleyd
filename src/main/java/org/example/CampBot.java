@@ -24,12 +24,15 @@ public class CampBot extends TelegramLongPollingBot {
     private static final Logger log = LoggerFactory.getLogger(CampBot.class);
 
     public CampBot() {
-        DefaultBotOptions options = new DefaultBotOptions();
-        options.setProxyHost("127.0.0.1");
-        options.setProxyPort(12334);
-        options.setProxyType(DefaultBotOptions.ProxyType.SOCKS5);
+        super(getOptionsWithSocksProxy());
+    }
 
-        super(options); // <- здесь подключаем прокси
+    private static DefaultBotOptions getOptionsWithSocksProxy() {
+        DefaultBotOptions options = new DefaultBotOptions();
+        options.setProxyHost("127.0.0.1");      // Hiddify mixed port
+        options.setProxyPort(12334);            // mixed port Hiddify
+        options.setProxyType(DefaultBotOptions.ProxyType.SOCKS5);
+        return options;
     }
 
 
