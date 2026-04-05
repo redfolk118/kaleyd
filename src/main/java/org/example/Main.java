@@ -7,8 +7,11 @@ import org.telegram.telegrambots.updatesreceivers.DefaultBotSession;
 public class Main {
     public static void main(String[] args) {
         try {
+            System.setProperty("org.telegram.telegrambots.disableWebhook", "true");
+
             TelegramBotsApi botsApi = new TelegramBotsApi(DefaultBotSession.class);
             botsApi.registerBot(new CampBot());
+
             System.out.println("Bot started!");
         } catch (TelegramApiException e) {
             e.printStackTrace();
