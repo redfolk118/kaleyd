@@ -9,9 +9,11 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMar
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
-import java.io.InputStream;
+import java.io.*;
 import java.nio.charset.StandardCharsets;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,18 +24,20 @@ import org.telegram.telegrambots.bots.DefaultBotOptions;
 public class CampBot extends TelegramLongPollingBot {
 
     private static final Logger log = LoggerFactory.getLogger(CampBot.class);
-
+    private static final String USERS_FILE = "users.txt";
+    private Set<Long> allChatIds = new HashSet<>();
     public CampBot() {
-        super(getOptionsWithSocksProxy());
+        loadUsers();
+//        super(getOptionsWithSocksProxy());
     }
 
-    private static DefaultBotOptions getOptionsWithSocksProxy() {
-        DefaultBotOptions options = new DefaultBotOptions();
-        options.setProxyHost("127.0.0.1");      // Hiddify mixed port
-        options.setProxyPort(12334);            // mixed port Hiddify
-        options.setProxyType(DefaultBotOptions.ProxyType.SOCKS5);
-        return options;
-    }
+//    private static DefaultBotOptions getOptionsWithSocksProxy() {
+//        DefaultBotOptions options = new DefaultBotOptions();
+//        options.setProxyHost("127.0.0.1");
+//        options.setProxyPort(12334);
+//        options.setProxyType(DefaultBotOptions.ProxyType.SOCKS5);
+//        return options;
+//    }
 
 
     @Override
@@ -49,8 +53,9 @@ public class CampBot extends TelegramLongPollingBot {
     @Override
     public void onUpdateReceived(Update update) {
         if (update.hasMessage() && update.getMessage().hasText()) {
-            String text = update.getMessage().getText();
             long chatId = update.getMessage().getChatId();
+            saveUser(chatId);
+            String text = update.getMessage().getText();
             log.info("New message from {}: {}", chatId, text);
             try {
                 switch (text) {
@@ -69,19 +74,25 @@ public class CampBot extends TelegramLongPollingBot {
                         break;
 
                     case "🎮 Игры":
-                        sendText(chatId, "🎮 Раздел игр (пока в разработке)");
+                        sendText(chatId, "🎮 потом");
                         break;
 
                     case "🍽 Столовая":
-                        sendText(chatId, "🍽 Меню столовой (пока в разработке)");
+                        sendCanteen(chatId);
                         break;
 
-                    case "📖 Правила":
-                        sendText(chatId, "📖 Правила лагеря (пока в разработке)");
+                    case "📞 Звонилка":
+                        sendText(chatId, "📖 отдых");
                         break;
 
-                    case "📋 Методички":
-                        sendText(chatId, "📋 Методички (пока в разработке)");
+                    case "📋 Дежурства":
+                        sendDuty(chatId);
+                        break;
+
+
+                    case "/refresh":
+                        broadcastMainMenu();
+                        sendText(chatId, "refresh stat ok");
                         break;
 
                     default:
@@ -90,6 +101,42 @@ public class CampBot extends TelegramLongPollingBot {
             } catch (Exception e) {
                 log.error("Error occurred", e);
                 sendError(chatId, e.getMessage());
+            }
+        }
+    }
+
+    private void loadUsers() {
+        File file = new File(USERS_FILE);
+        if (!file.exists()) return;
+
+        try (BufferedReader br = new BufferedReader(new FileReader(file))) {
+            String line;
+            while ((line = br.readLine()) != null) {
+                allChatIds.add(Long.parseLong(line.trim()));
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void saveUser(long chatId) {
+        if (allChatIds.add(chatId)) { // добавляем только если нового
+            try (BufferedWriter bw = new BufferedWriter(new FileWriter(USERS_FILE, true))) {
+                bw.write(String.valueOf(chatId));
+                bw.newLine();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private void broadcastMainMenu() {
+        for (Long chatId : allChatIds) {
+            try {
+                sendMainMenu(chatId);
+                sendText(chatId, "refresh stat ok");
+            } catch (TelegramApiException e) {
+                e.printStackTrace();
             }
         }
     }
@@ -118,8 +165,8 @@ public class CampBot extends TelegramLongPollingBot {
         row2.add("🍽 Столовая");
 
         KeyboardRow row3 = new KeyboardRow();
-        row3.add("📖 Правила");
-        row3.add("📋 Методички");
+        row3.add("📞 Звонилка");
+        row3.add("📋 Дежурства");
 
         keyboard.setKeyboard(List.of(row1, row2, row3));
 
@@ -178,8 +225,10 @@ public class CampBot extends TelegramLongPollingBot {
                 sendError(chatId, "Plan grid image not found in resources");
                 return;
             }
+            sendText(chatId, "секунду, отправляю");
 
             SendPhoto photo = new SendPhoto();
+
             photo.setChatId(chatId);
             photo.setPhoto(new InputFile(inputStream, "plan_setka.png"));
             execute(photo);
@@ -187,4 +236,43 @@ public class CampBot extends TelegramLongPollingBot {
             sendError(chatId, "Failed to send image: " + e.getMessage());
         }
     }
+
+    private void sendCanteen(long chatId) throws TelegramApiException {
+        try {
+            InputStream inputStream = getClass().getClassLoader().getResourceAsStream("canteen.png");
+            if (inputStream == null) {
+                sendError(chatId, "Plan grid image not found in resources");
+                return;
+            }
+            sendText(chatId, "секунду, отправляю");
+
+            SendPhoto photo = new SendPhoto();
+
+            photo.setChatId(chatId);
+            photo.setPhoto(new InputFile(inputStream, "canteen.png"));
+            execute(photo);
+        } catch (Exception e) {
+            sendError(chatId, "Failed to send image: " + e.getMessage() + "send exception to @redfolk118");
+        }
+    }
+
+    private void sendDuty(long chatId) throws TelegramApiException {
+        try {
+            InputStream inputStream = getClass().getClassLoader().getResourceAsStream("duty.png");
+            if (inputStream == null) {
+                sendError(chatId, "Plan grid image not found in resources");
+                return;
+            }
+            sendText(chatId, "секунду, отправляю");
+
+            SendPhoto photo = new SendPhoto();
+
+            photo.setChatId(chatId);
+            photo.setPhoto(new InputFile(inputStream, "duty.png"));
+            execute(photo);
+        } catch (Exception e) {
+            sendError(chatId, "Failed to send image: " + e.getMessage() + "send exception to @redfolk118");
+        }
+    }
+
 }
